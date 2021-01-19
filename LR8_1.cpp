@@ -1,43 +1,70 @@
-﻿#include <iostream>
+#include <iostream>
 
 using namespace std;
+
+struct Example {
+    int number = 0;
+};
 
 template <typename T>
 
 struct Node {
-	T information = 0;
+	T information;
 	Node<T> *next = nullptr;
 	Node<T> *prev = nullptr;
 };
 
 template <typename T>
 
-Node<T>* constructor(T new_information) {
-	Node<T>* root = new Node<T>;
-	root->information = new_information;
-	root->next = root;
-	root->prev = root;
-	return(root);
+struct List {
+    Node<T> *head = nullptr;
+    bool is_empty() {
+        if (head == nullptr) {
+            return true;
+        }
+        return false;
+    }
+};
+
+template <typename T>
+
+List<T>* constructor(T new_information) {
+	auto new_list = new List<T>;
+	auto new_head = new Node<T>;
+	new_head->next = new_head;
+	new_head->prev = new_head;
+	new_head->information = new_information;
+	new_list->head = new_head;
+	return new_list;
 }
 
 template <typename T>
 
-void destructor(Node<T>* list) {
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		list = list->next;
-		delete list->prev;
-	};
-	delete list;
+void destructor(List<T>* list) {
+	if (list->is_empty()) {
+	    cout << "Ring is already destructed!" << endl;
+	} else {
+	    Node<T>* tmp = list->head->prev;
+	    while (list->head != tmp) {
+	        list->head = list->head->next;
+	        delete list->head->prev;
+	    }
+        tmp = list->head;
+	    list->head = nullptr;
+	    delete tmp;
+	}
 }
 
 template <typename T>
 
-int count(Node<T>* list) {
+int count(List<T>* list) {
+    if (list->is_empty()) {
+        return 0;
+    }
 	int cnt = 1;
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		list = list->next;
+	Node<T>* tmp = list->head->next;
+	while (tmp != list->head) {
+		tmp = tmp->next;
 		++cnt;
 	}
 	return cnt;
@@ -45,209 +72,276 @@ int count(Node<T>* list) {
 
 template <typename T>
 
-Node<T>* add_first(Node<T>* list, T new_information) {
-	Node<T>* tmp = new Node<T>;
-	if (count(list) == 1) {
-		tmp->next = list;
-		tmp->prev = list;
-		list->next = tmp;
-		list->prev = tmp;
-		tmp->information = new_information;
-		return tmp;
-	}
-	tmp->prev = list->prev;
-	list->prev = tmp;
-	tmp->next = list;
-	list->prev->next = tmp;
-	tmp->information = new_information;
-	list = tmp;
-	tmp = tmp->prev;
-	return tmp;
+void add_first(List<T>* list, T new_information) {
+    if (list->is_empty()) {
+        cout << "Before adding new element you should construct a ring!";
+        return;
+    }
+	auto tmp = new Node<T>;
+    tmp->information = new_information;
+	if (list->head == list->head->next) { //если 1 элемент
+		tmp->next = list->head;
+		tmp->prev = list->head;
+		list->head->next = tmp;
+		list->head->prev = tmp;
+		list->head = tmp;
+	} else {
+        tmp->next = list->head;
+        list->head->prev->next = tmp;
+        tmp->prev = list->head->prev;
+        list->head->prev = tmp;
+        list->head = tmp;
+    }
 }
 
 template <typename T>
 
-Node<T>* add_last(Node<T>* list, T new_information) {
-	Node<T>* tmp = new Node<T>;
-	if (count(list) == 1) {
-		tmp->next = list;
-		tmp->prev = list;
-		list->next = tmp;
-		list->prev = tmp;
-		tmp->information = new_information;
-		return list;
-	}
-	tmp->next = list;
-	list->prev->next = tmp;
-	tmp->prev = list->prev;
-	list->prev = tmp;
-	tmp->information = new_information;
-	return list;
+void add_last(List<T>* list, T new_information) {
+    if (list->is_empty()) {
+        cout << "Before adding new element you should construct a ring!";
+        return;
+    }
+	auto tmp = new Node<T>;
+    tmp->information = new_information;
+	if (list->head == list->head->next) {
+        tmp->next = list->head;
+        tmp->prev = list->head;
+        list->head->next = tmp;
+        list->head->prev = tmp;
+	} else {
+        tmp->next = list->head;
+        list->head->prev->next = tmp;
+        tmp->prev = list->head->prev;
+        list->head->prev = tmp;
+    }
 }
 
 template <typename T>
 
-Node<T>* add_by_index(Node<T>* list, T new_information, int index) {
+void add_by_index(List<T>* list, T new_information, int index) {
+    if (list->is_empty()) {
+        cout << "Before adding new element you should construct a ring!";
+        return;
+    }
 	int cnt = 0;
 	if (index == 0) {
-		return(add_first(list, new_information));
+	    add_first(list, new_information);
+	} else {
+	    Node<T>* tmp = list->head;
+	    while (cnt != index) {
+	        tmp = tmp->next;
+	        ++cnt;
+	    }
+	    auto new_node = new Node<T>;
+	    new_node->information = new_information;
+	    new_node->prev = tmp->prev;
+	    new_node->next = tmp;
+	    tmp->prev->next = new_node;
+	    tmp->prev = new_node;
 	}
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		if (cnt == index) {
-			Node<T>* tmp1 = new Node<T>;
-			tmp1->next = list;
-			tmp1->prev = list->prev;
-			list->prev = tmp1;
-			tmp1->information = new_information;
-			return(tmp->next);
-		}
-		list = list->next;
-		++cnt;
-	}
-	return(add_last(tmp->next, new_information));
 }
 
 template <typename T>
 
-Node<T>* add_by_pointer(Node<T>* list, Node<T>* pointer, T new_information) {
-	int cnt = 0;
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		if (list == pointer) {
-			return(add_by_index(list, new_information, cnt));
-		}
-		list = list->next;
-		++cnt;
+void add_by_pointer(List<T>* list, Node<T>* pointer, T new_information) {
+    if (list->is_empty()) {
+        cout << "Before adding new element you should construct a ring!";
+        return;
+    }
+	if (list->head->prev == pointer) {
+	    add_first(list, new_information);
+	} else {
+	    Node<T>* tmp = list->head;
+	    while (tmp != pointer) {
+	        tmp = tmp->next;
+	    }
+        auto new_node = new Node<T>;
+        new_node->information = new_information;
+        new_node->prev = tmp;
+        new_node->next = tmp->next;
+        tmp->next->prev = new_node;
+        tmp->next = new_node;
 	}
-	return(add_by_index(list, new_information, cnt + 1));
 }
 
 template <typename T>
 
-Node<T>* pop_first(Node<T>* list) {
-	if (count(list) == 1) {
-		return(list);
+T pop_first(List<T>* list) {
+    if (list->is_empty()) {
+        cout << "Ring is empty!";
+        return -1;
+    }
+    T info = list->head->information;
+	if (list->head == list->head->next) {
+	    list->head = nullptr;
+	} else {
+	    list->head->next->prev = list->head->prev;  //меняем связи
+	    list->head->prev->next = list->head->next;  //меняем связи
+        Node<T>* tmp = list->head;
+	    list->head = list->head->next;
+	    delete tmp;
 	}
-	list->next->prev = list->prev;
-	list->prev->next = list->next;
-	list->next = list;
-	list->prev = list;
-	return list;
+    return info;
 }
 
 template <typename T>
 
-Node<T>* pop_last(Node<T>* list) {
-	if (count(list) == 1) {
-		return(list);
-	}
-	Node<T>* tmp = list->prev;
-	list->prev->prev->next = list;
-	list->prev = list->prev->prev;
-	list->next = list;
-	list->prev = list;
-	return tmp;
+T pop_last(List<T>* list) {
+    if (list->is_empty()) {
+        cout << "Ring is empty!";
+        return -1;
+    }
+    T info = list->head->prev->information;
+    Node<T> *tmp = list->head->prev;
+    list->head->prev->prev->next = list->head;
+    list->head->prev = list->head->prev->prev;
+    delete tmp;
+    return info;
 }
 
 template <typename T>
 
-Node<T>* pop_by_index(Node<T>* list, int index) {
-	int cnt = 0;
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		if (cnt == index) {
-			list->next = list;
-			list->prev = list;
-			return(pop_first(list));
-		}
-		list = list->next;
-		++cnt;
-	}
-	list->next = list;
-	list->prev = list;
-	return(pop_first(list));
+T pop_by_index(List<T>* list, int index) {
+    int cnt = 0;
+    if (list->is_empty()) {
+        cout << "Ring is empty!";
+        return -1;
+    }
+    if (index == 0) {
+        return pop_first(list);
+    }
+    Node<T>* tmp = list->head;
+    while (cnt != index) {
+        tmp = tmp->next;
+        ++cnt;
+    }
+	tmp->prev->next = tmp->next;
+    tmp->next->prev = tmp->prev;
+    T info = tmp->information;
+    delete tmp;
+    return info;
 }
 
 template <typename T>
 
-Node<T>* pop_by_pointer(Node<T>* list, Node<T>* pointer) {
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		if (list == pointer) {
-			list->next = list;
-			list->prev = list;
-			return(pop_first(list));
-		}
-		list = list->next;
+T pop_by_pointer(List<T>* list, Node<T>* pointer) {
+    if (list->is_empty()) {
+        cout << "Ring is empty!";
+        return -1;
+    }
+    if (pointer == list->head) {
+        return pop_first(list);
+    }
+	Node<T>* tmp = list->head;
+	while (tmp != pointer) {
+	    tmp = tmp->next;
+	    if (tmp == list->head) {
+	        cout << "No such pointer in ring!" << endl;
+            return -1;
+	    }
 	}
-	list->next = list;
-	list->prev = list;
-	return(pop_first(tmp));
+    tmp->prev->next = tmp->next;
+    tmp->next->prev = tmp->prev;
+    T info = tmp->information;
+    delete tmp;
+    return info;
 }
 
 template <typename T>
 
-T get_information_by_index(Node<T>* list, int index) {
-	int cnt = 0;
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		if (cnt == index) {
-			return(list->information);
-		}
-		list = list->next;
-		++cnt;
-	}
-	return(tmp->information);
+T get_information_by_index(List<T>* list, int index) {
+    int cnt = 0;
+    if (list->is_empty()) {
+        cout << "Ring is empty!";
+        return -1;
+    }
+    Node<T>* tmp = list->head;
+    while (cnt != index) {
+        tmp = tmp->next;
+        ++cnt;
+    }
+    return tmp->information;
 }
 
 template <typename T>
 
-int get_pos(Node<T>* list, T information) {
-	int cnt = 0;
-	Node<T>* tmp = list->prev;
-	while (list != tmp) {
-		if (list->information == information) {
-			return(cnt);
-		}
-		list = list->next;
-		++cnt;
-	}
-	return(cnt);
+int get_pos(List<T>* list, T information) {
+    int cnt = 0;
+    if (list->is_empty()) {
+        cout << "Ring is empty!";
+        return -1;
+    }
+    Node<T>* tmp = list->head;
+    while (tmp->information != information) {
+        tmp = tmp->next;
+        ++cnt;
+    }
+    return cnt;
 }
 
 template <typename T>
 
-void print(Node<T>* list) {
-	if (list == list->prev) {
-		cout << list->information;
-		return;
-	}
-	else {
-		Node<T>* tmp = list->prev;
-		while (list != tmp) {
-			cout << list->information << ' ';
-			list = list->next;
-		}
-		cout << tmp->information;
+void print(List<T>* list) {
+    if (list->is_empty()) {
+        cout << "Ring is empty!" << endl;
+        return;
+    }
+	if (list->head == list->head->next) {
+		cout << list->head->information;
+	} else {
+	    cout << list->head->information << ' ';
+	    Node<T> *tmp = list->head->next;
+	    while (tmp != list->head) {
+	        cout << tmp->information << ' ';
+	        tmp = tmp->next;
+	    }
 	}
 	cout << endl;
 }
 
+ostream& operator<<(ostream& stream, Example ex) {
+    stream << '?' << ex.number << '?';
+    return stream;
+}
 
 int main() {
-	Node<int>* node = constructor(2);
-	print(node);
-	node = add_first(node, 3);
-	print(node);
-	node = add_last(node, 5);
-	print(node);
-	node = add_by_index(node, 10, 2);
-	cout << count(node) << endl;
-	cout << get_pos(node, 5) << endl;
-	print(node);
-	node = pop_first(node);
-	print(node);
+	List<int>* list = constructor(2);
+	print(list);
+    add_first(list, 3);
+    add_first(list, 4);
+    print(list);
+    add_last(list, 5);
+    print(list);
+    cout << "Size: " << count(list) << endl;
+    add_by_index(list, 6, 2);
+    print(list);
+    add_by_pointer(list, list->head, 7);
+    print(list);
+    add_by_pointer(list, list->head->prev, 9);
+    print(list);
+    cout << pop_first(list) << endl;
+    print(list);
+    cout << pop_last(list) << endl;
+    print(list);
+    cout << pop_by_index(list, 2) << endl;
+    print(list);
+    cout << pop_by_pointer(list, list->head->next) << endl;
+    print(list);
+    cout << get_information_by_index(list, 0) << endl;
+    print(list);
+    cout << get_pos(list, 6) << endl;
+    print(list);
+    destructor(list);
+    print(list);
+
+    Example new_example_1, new_example_2, new_example_3;
+    new_example_1.number = 5;
+    new_example_2.number = 25;
+    new_example_3.number = 125;
+    List<Example> *ex_list = constructor(new_example_1);
+    add_first(ex_list, new_example_2);
+    add_last(ex_list, new_example_3);
+    print(ex_list);
 
 	return 0;
 }
