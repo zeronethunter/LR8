@@ -111,9 +111,7 @@ T pop_first(List<T, size>& list) {
         list.elements[i] = list.elements[i + 1];
     }
     list.elements[list.true_size - 1] = make_it_clear<T>();
-    if (list.true_size != 0) {
-        --list.true_size;
-    }
+    --list.true_size;
     return tmp;
 }
 
@@ -126,9 +124,7 @@ T pop_last(List<T, size>& list) {
     }
     T tmp = list.elements[list.true_size - 1];
     list.elements[list.true_size - 1] = make_it_clear<T>();
-    if (list.true_size != 0) {
-        --list.true_size;
-    }
+    --list.true_size;
     return tmp;
 }
 
