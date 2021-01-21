@@ -107,13 +107,13 @@ T pop_first(List<T, size>& list) {
     }
     T tmp = list.elements[0];
     list.elements[0] = make_it_clear<T>();
-    if (list.true_size != 0) {
-        for (int i = 0; i < list.true_size - 1; i++) {
-            list.elements[i] = list.elements[i + 1];
-        }
-        list.elements[list.true_size - 1] = make_it_clear<T>();
+    for (int i = 0; i < list.true_size - 1; i++) {
+        list.elements[i] = list.elements[i + 1];
     }
-    --list.true_size;
+    list.elements[list.true_size - 1] = make_it_clear<T>();
+    if (list.true_size != 0) {
+        --list.true_size;
+    }
     return tmp;
 }
 
@@ -139,7 +139,7 @@ T pop_by_index(List<T, size>& list, int index) {
         cout << "Empty!" << endl;
         return make_it_clear<T>();
     }
-    if (index > size) {
+    if (index >= size) {
         cout << "Enter correct index!" << endl;
         return make_it_clear<T>();
     }
@@ -175,7 +175,7 @@ T get_by_index(List<T, size>& list, int index) {
         cout << "No such element in index " << index << endl;
         return make_it_clear<T>();
     }
-    if (index > list.true_size) {
+    if (index >= list.true_size) {
         return make_it_clear<T>();
     }
     return list.elements[index];
